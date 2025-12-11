@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Береста - Мессенджер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .messenger-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* Сайдбар с чатами */
+        .sidebar {
+            width: 350px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .user-status {
+            font-size: 14px;
+            color: #28a745;
+        }
+
+        .new-chat-btn {
+            margin-top: 20px;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            background: #5a67d8;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-item {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #e9ecef;
+        }
+
+        .chat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chat-item.active {
+            background: #e6f7ff;
+            border-color: #1890ff;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Основная область чата */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-partner-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .call-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .call-btn:hover {
+            background: #218838;
+        }
+
+        .video-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .video-btn:hover {
+            background: #c82333;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            max-width: 70%;
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-outgoing {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-incoming {
+            background: white;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message-time {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #5a67d8;
+        }
+
+        /* Модальное окно для нового чата */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .modal-btn.cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn.create {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Область звонка */
+        .call-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .call-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .call-partner {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .call-timer {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .call-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .call-control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .call-control-btn.accept {
+            background: #28a745;
+            color: white;
+        }
+
+        .call-control-btn.reject {
+            background: #dc3545;
+            color: white;
+        }
+
+        .call-control-btn.end-call {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .messenger-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .chat-area {
+                display: none;
+            }
+            
+            .chat-area.active {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="messenger-container">
+        <!-- Сайдбар с чатами -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">Б</div>
+                    <div>
+                        <div class="user-name" id="userName">Береста</div>
+                        <div class="user-status" id="userStatus">online</div>
+                    </div>
+                </div>
+                <button class="new-chat-btn" id="newChatBtn">+ Новый чат</button>
+            </div>
+            <div class="chat-list" id="chatList">
+                <!-- Список чатов будет загружаться здесь -->
+            </div>
+        </div>
+
+        <!-- Основная область чата -->
+        <div class="chat-area" id="chatArea">
+            <div class="chat-header">
+                <div class="chat-partner-info">
+                    <div class="user-avatar" id="chatPartnerAvatar">Д</div>
+                    <div>
+                        <div class="user-name" id="chatPartnerName">Друзья</div>
+                        <div class="user-status" id="chatPartnerStatus">был(а) только что</div>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn call-btn" id="voiceCallBtn">
+                        📞 Аудиозвонок
+                    </button>
+                    <button class="action-btn video-btn" id="videoCallBtn">
+                        🎥 Видеозвонок
+                    </button>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <!-- Сообщения будут загружаться здесь -->
+            </div>
+
+            <div class="message-input-area">
+                <input type="text" 
+                       class="message-input" 
+                       id="messageInput" 
+                       placeholder="Введите сообщение..."
+                       autocomplete="off">
+                <button class="send-btn" id="sendBtn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для нового чата -->
+    <div class="modal" id="newChatModal">
+        <div class="modal-content">
+            <h3>Создать новый чат</h3>
+            <input type="text" 
+                   class="modal-input" 
+                   id="newChatName" 
+                   placeholder="Введите имя собеседника">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelNewChat">Отмена</button>
+                <button class="modal-btn create" id="createNewChat">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Окно звонка -->
+    <div class="call-container" id="callContainer">
+        <div class="call-box">
+            <div class="user-avatar" id="callAvatar" style="margin: 0 auto 20px; width: 80px; height: 80px; font-size: 32px;">Д</div>
+            <div class="call-partner" id="callPartnerName">Друзья</div>
+            <div class="call-status" id="callStatus">Установка соединения...</div>
+            <div class="call-timer" id="callTimer">00:00</div>
+            <div class="call-controls">
+                <button class="call-control-btn accept" id="acceptCallBtn">✓</button>
+                <button class="call-control-btn reject" id="rejectCallBtn">✗</button>
+                <button class="call-control-btn end-call" id="endCallBtn" style="display: none;">✗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebRTC скрипты -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script>
+        class BerezaMessenger {
+            constructor() {
+                this.socket = null;
+                this.currentUser = {
+                    id: 'user_' + Date.now(),
+                    name: 'Береста',
+                    avatar: 'Б'
+                };
+                this.chats = [];
+                this.currentChatId = null;
+                this.currentCall = null;
+                this.callTimer = null;
+                this.callStartTime = null;
+                
+                this.init();
+            }
+
+            async init() {
+                // Устанавливаем имя пользователя
+                const userName = localStorage.getItem('beresta_username') || 'Береста';
+                this.currentUser.name = userName;
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('userAvatar').textContent = userName.charAt(0);
+                
+                // Подключаемся к серверу
+                this.connectToServer();
+                
+                // Настраиваем обработчики событий
+                this.setupEventListeners();
+                
+                // Загружаем чаты
+                this.loadChats();
+            }
+
+            connectToServer() {
+                this.socket = io(window.location.origin);
+                
+                this.socket.on('connect', () => {
+                    console.log('Connected to server');
+                    this.socket.emit('user_connected', this.currentUser);
+                    
+                    // Запрашиваем историю чатов
+                    this.socket.emit('get_chats', this.currentUser.id);
+                });
+
+                this.socket.on('chats_list', (chats) => {
+                    this.chats = chats;
+                    this.renderChatList();
+                });
+
+                this.socket.on('chat_created', (chat) => {
+                    this.chats.push(chat);
+                    this.renderChatList();
+                });
+
+                this.socket.on('new_message', (data) => {
+                    if (data.chatId === this.currentChatId) {
+                        this.addMessageToChat(data.message, false);
+                    }
+                    this.updateChatList();
+                });
+
+                this.socket.on('incoming_call', (data) => {
+                    this.showIncomingCall(data);
+                });
+
+                this.socket.on('call_accepted', () => {
+                    this.startCallTimer();
+                    document.getElementById('callStatus').textContent = 'Звонок активен';
+                });
+
+                this.socket.on('call_rejected', () => {
+                    this.endCall();
+                    alert('Звонок отклонен');
+                });
+
+                this.socket.on('call_ended', () => {
+                    this.endCall();
+                    alert('Звонок завершен');
+                });
+            }
+
+            setupEventListeners() {
+                // Кнопка нового чата
+                document.getElementById('newChatBtn').addEventListener('click', () => {
+                    document.getElementById('newChatModal').style.display = 'flex';
+                });
+
+                // Создание нового чата
+                document.getElementById('createNewChat').addEventListener('click', () => {
+                    const chatName = document.getElementById('newChatName').value.trim();
+                    if (chatName) {
+                        this.createNewChat(chatName);
+                        document.getElementById('newChatModal').style.display = 'none';
+                        document.getElementById('newChatName').value = '';
+                    }
+                });
+
+                // Отмена создания чата
+                document.getElementById('cancelNewChat').addEventListener('click', () => {
+                    document.getElementById('newChatModal').style.display = 'none';
+                });
+
+                // Отправка сообщения
+                document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+
+                // Звонки
+                document.getElementById('voiceCallBtn').addEventListener('click', () => this.startCall('voice'));
+                document.getElementById('videoCallBtn').addEventListener('click', () => this.startCall('video'));
+                document.getElementById('acceptCallBtn').addEventListener('click', () => this.acceptCall());
+                document.getElementById('rejectCallBtn').addEventListener('click', () => this.rejectCall());
+                document.getElementById('endCallBtn').addEventListener('click', () => this.endCall());
+            }
+
+            loadChats() {
+                // Загружаем чаты из localStorage
+                const savedChats = localStorage.getItem('beresta_chats');
+                if (savedChats) {
+                    this.chats = JSON.parse(savedChats);
+                    this.renderChatList();
+                }
+            }
+
+            saveChats() {
+                localStorage.setItem('beresta_chats', JSON.stringify(this.chats));
+            }
+
+            renderChatList() {
+                const chatList = document.getElementById('chatList');
+                chatList.innerHTML = '';
+                
+                this.chats.forEach(chat => {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = `chat-item ${chat.id === this.currentChatId ? 'active' : ''}`;
+                    chatElement.innerHTML = `
+                        <div class="chat-name">${chat.name}</div>
+                        <div class="last-message">${chat.lastMessage || 'Нет сообщений'}</div>
+                    `;
+                    
+                    chatElement.addEventListener('click', () => this.selectChat(chat));
+                    chatList.appendChild(chatElement);
+                });
+            }
+
+            createNewChat(name) {
+                const newChat = {
+                    id: 'chat_' + Date.now(),
+                    name: name,
+                    participants: [this.currentUser.id, 'user_2'],
+                    messages: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.chats.push(newChat);
+                this.saveChats();
+                this.renderChatList();
+                
+                // Отправляем на сервер
+                if (this.socket) {
+                    this.socket.emit('create_chat', newChat);
+                }
+                
+                // Выбираем новый чат
+                this.selectChat(newChat);
+            }
+
+            selectChat(chat) {
+                this.currentChatId = chat.id;
+                this.renderChatList();
+                
+                // Обновляем заголовок чата
+                document.getElementById('chatPartnerName').textContent = chat.name;
+                document.getElementById('chatPartnerAvatar').textContent = chat.name.charAt(0);
+                document.getElementById('callPartnerName').textContent = chat.name;
+                document.getElementById('callAvatar').textContent = chat.name.charAt(0);
+                
+                // Показываем область чата
+                document.getElementById('chatArea').classList.add('active');
+                
+                // Загружаем сообщения
+                this.loadMessages(chat);
+            }
+
+            loadMessages(chat) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                messagesContainer.innerHTML = '';
+                
+                chat.messages.forEach(msg => {
+                    this.addMessageToChat(msg, msg.senderId === this.currentUser.id);
+                });
+                
+                // Прокручиваем вниз
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                
+                if (!text || !this.currentChatId) return;
+                
+                const message = {
+                    id: 'msg_' + Date.now(),
+                    text: text,
+                    senderId: this.currentUser.id,
+                    senderName: this.currentUser.name,
+                    timestamp: new Date().toISOString(),
+                    chatId: this.currentChatId
+                };
+                
+                // Добавляем сообщение в интерфейс
+                this.addMessageToChat(message, true);
+                
+                // Сохраняем в локальный чат
+                const chat = this.chats.find(c => c.id === this.currentChatId);
+                if (chat) {
+                    chat.messages.push(message);
+                    chat.lastMessage = text;
+                    this.saveChats();
+                    this.updateChatList();
+                }
+                
+                // Отправляем на сервер
+                if (this.socket) {
+                    this.socket.emit('send_message', message);
+                }
+                
+                // Очищаем поле ввода
+                input.value = '';
+                input.focus();
+            }
+
+            addMessageToChat(message, isOutgoing) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                const messageElement = document.createElement('div');
+                
+                const time = new Date(message.timestamp).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                messageElement.className = `message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}`;
+                messageElement.innerHTML = `
+                    <div>${message.text}</div>
+                    <div class="message-time">${time}</div>
+                `;
+                
+                messagesContainer.appendChild(messageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            updateChatList() {
+                this.renderChatList();
+            }
+
+            startCall(type) {
+                if (!this.currentChatId) {
+                    alert('Выберите чат для звонка');
+                    return;
+                }
+                
+                const chat = this.chats.find(c => c.id === this.currentChatId);
+                if (!chat) return;
+                
+                this.currentCall = {
+                    type: type,
+                    chatId: this.currentChatId,
+                    partnerName: chat.name,
+                    status: 'calling'
+                };
+                
+                // Показываем окно звонка
+                document.getElementById('callContainer').style.display = 'flex';
+                document.getElementById('callStatus').textContent = 'Вызов...';
+                document.getElementById('acceptCallBtn').style.display = 'none';
+                document.getElementById('rejectCallBtn').style.display = 'none';
+                document.getElementById('endCallBtn').style.display = 'block';
+                
+                // Отправляем запрос на сервер
+                if (this.socket) {
+                    this.socket.emit('start_call', {
+                        chatId: this.currentChatId,
+                        caller: this.currentUser.name,
+                        type: type
+                    });
+                }
+            }
+
+            showIncomingCall(data) {
+                this.currentCall = {
+                    type: data.type,
+                    chatId: data.chatId,
+                    partnerName: data.caller,
+                    status: 'incoming'
+                };
+                
+                document.getElementById('callContainer').style.display = 'flex';
+                document.getElementById('callPartnerName').textContent = data.caller;
+                document.getElementById('callStatus').textContent = 'Входящий звонок...';
+                document.getElementById('acceptCallBtn').style.display = 'block';
+                document.getElementById('rejectCallBtn').style.display = 'block';
+                document.getElementById('endCallBtn').style.display = 'none';
+            }
+
+            acceptCall() {
+                if (!this.currentCall || !this.socket) return;
+                
+                this.currentCall.status = 'active';
+                document.getElementById('callStatus').textContent = 'Звонок активен';
+                document.getElementById('acceptCallBtn').style.display = 'none';
+                document.getElementById('rejectCallBtn').style.display = 'none';
+                document.getElementById('endCallBtn').style.display = 'block';
+                
+                this.socket.emit('accept_call', {
+                    chatId: this.currentCall.chatId
+                });
+                
+                this.startCallTimer();
+            }
+
+            rejectCall() {
+                if (this.socket && this.currentCall) {
+                    this.socket.emit('reject_call', {
+                        chatId: this.currentCall.chatId
+                    });
+                }
+                this.endCall();
+            }
+
+            endCall() {
+                if (this.currentCall && this.socket) {
+                    this.socket.emit('end_call', {
+                        chatId: this.currentCall.chatId
+                    });
+                }
+                
+                this.currentCall = null;
+                document.getElementById('callContainer').style.display = 'none';
+                
+                if (this.callTimer) {
+                    clearInterval(this.callTimer);
+                    this.callTimer = null;
+                }
+            }
+
+            startCallTimer() {
+                this.callStartTime = new Date();
+                
+                this.callTimer = setInterval(() => {
+                    const now = new Date();
+                    const diff = Math.floor((now - this.callStartTime) / 1000);
+                    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+                    const seconds = (diff % 60).toString().padStart(2, '0');
+                    
+                    document.getElementById('callTimer').textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+        }
+
+        // Инициализация мессенджера при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            window.messenger = new BerezaMessenger();
+        });
+    </script>
+</body>
+</html>
